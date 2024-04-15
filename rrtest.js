@@ -62,6 +62,7 @@ function generateCorners(distance, source, nearby) {
   let sourcePt = new pt(source.latitude, source.longitude);
   let scaleFactor = 500;
   let scaledLocs = scaleLatLngPoints(sourcePt, scaleFactor, nearbyLocs);
+  console.log(getAverageXY(scaledLocs));
 
   // generate the loop using the scaled points, and then descale
   var slices = 7;

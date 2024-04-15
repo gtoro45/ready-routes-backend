@@ -56,3 +56,12 @@ function genLoop(dist, slices, potentialPts, source) {
     return pts;
 }
 
+function getAverageXY(list) {
+    let sumX = 0;
+    let sumY = 0;
+    for(let i = 0; i < list.length; i++) {
+        sumX += list[i].x;
+        sumY += list[i].y;
+    }
+    return new pt(sumX / list.length, sumY / list.length);
+}
