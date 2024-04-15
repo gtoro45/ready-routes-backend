@@ -27,6 +27,7 @@ function initMap() {
   });
 }
 
+
 // main logic function calls a ton of promises
 function route(directionsService, directionsRenderer) {
   //get the source address and distance information 
@@ -38,10 +39,7 @@ function route(directionsService, directionsRenderer) {
   geocodePromise(sourceAddr, geocoderService).then((sourceGeoLoc => {
     // use the source data to get a list of nearby waypoints -> returned by promise as nearbyList
     nearbyLocationsPromise(sourceGeoLoc).then((nearbyList) => {
-      // TODO: write route algorithm
 			let waypoints = generateCorners(distance, sourceGeoLoc, nearbyList);
-      console.log(nearbyList);
-
 			// call displayRoute() to show on map
 			displayRoute(waypoints, directionsService, directionsRenderer);
     
@@ -54,13 +52,41 @@ function route(directionsService, directionsRenderer) {
   });
 }
 
+
+
 // corner generating algorithm based on the source and its
 // nearby waypoints
 function generateCorners(distance, source, nearby) {
-  // TODO
+  // generate parallel lists: 
+  // one with just lat/lng
+  // one with lat/lng scaled to cartesian
+  sourcePt = new pt(source.latitude, source.longitude);
+  let nearbyLocs = [];
+  for(let i = 1; i < nearby.length; i++) {
+    let lat = nearby[i].geometry.viewport.Zh.hi;
+    let lng = nearby[i].geometry.viewport.Jh.hi;
+    nearbyLocs[i - 1] = new pt(lat,lng);
+  }
 
-	// dummy return
-	return [{location: {lat: source.latitude, lng: source.longitude}}];
+  let scaleFactor = 500;
+  let scaledLocs = []
+  let str = '';
+  for(let i = 0; i < nearbyLocs.length; i++) {
+    let newX = (nearbyLocs[i].x - sourcePt.x) * scaleFactor;
+    let newY = (nearbyLocs[i].y - sourcePt.y) * scaleFactor;
+        
+    let data = '(' + newX + ',' + newY + ')\n';
+    str += data;
+
+    scaledLocs[i] = new pt(newX, newY);
+  }
+
+  console.log(str);
+  console.log(nearbyLocs);
+  console.log(scaledLocs);
+
+  var slices = 7;
+  let loop = genLoop(distance, slices, scaledLocs, sourcePt);
 }
 
 // calcRoute function is defined and the google services will need to be passed as parameters since we will use
