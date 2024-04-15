@@ -13,6 +13,7 @@ function initMap() {
     //30.6149996259997, -96.34153199058316 A&M University coordinates
     center: { lat: 30.614, lng: -96.34},
     zoom: 15,
+    mapTypeId: 'hybrid'
   });
 
   directionsRenderer.setMap(map);
@@ -23,27 +24,28 @@ function initMap() {
 
   //when the button with the "submit" id is click the calcRoute function runs
   document.getElementById("submit").addEventListener("click", () => {
-    route(directionsService, directionsRenderer);
+    var source = document.getElementById("source").value;
+    route(directionsService, directionsRenderer, source);
   });
 }
 
 
 // main logic function calls a ton of promises
-function route(directionsService, directionsRenderer) {
+function route(directionsService, directionsRenderer, sourceAddr) {
   //get the source address and distance information 
-  var sourceAddr = document.getElementById("source").value; 
-  var distance = document.getElementById("distance").value;
+  var distance = milesToMetersString(document.getElementById("distance").value);
+  console.log(distance, "m");
+  
   var geocoderService = new google.maps.Geocoder();
   
   // get source geolocation data -> returned by promise as sourceGeoLoc
   geocodePromise(sourceAddr, geocoderService).then((sourceGeoLoc => {
     // use the source data to get a list of nearby waypoints -> returned by promise as nearbyList
-    nearbyLocationsPromise(sourceGeoLoc).then((nearbyList) => {
+    nearbyLocationsPromise(sourceGeoLoc, distance).then((nearbyList) => {
 			let waypoints = generateCorners(distance, sourceGeoLoc, nearbyList);
-			// call displayRoute() to show on map
 			displayRoute(waypoints, directionsService, directionsRenderer);
-    
-    // catch any promise rejections
+  
+      // catch any promise rejections
     }).catch((error) => {
       console.log(error);
     })
@@ -53,40 +55,22 @@ function route(directionsService, directionsRenderer) {
 }
 
 
-
-// corner generating algorithm based on the source and its
-// nearby waypoints
+// corner generating algorithm based on the source and its nearby waypoints
 function generateCorners(distance, source, nearby) {
-  // generate parallel lists: 
-  // one with just lat/lng
-  // one with lat/lng scaled to cartesian
-  sourcePt = new pt(source.latitude, source.longitude);
-  let nearbyLocs = [];
-  for(let i = 1; i < nearby.length; i++) {
-    let lat = nearby[i].geometry.viewport.Zh.hi;
-    let lng = nearby[i].geometry.viewport.Jh.hi;
-    nearbyLocs[i - 1] = new pt(lat,lng);
-  }
-
+  // convert lat/lng to points and scale to cartesian grid
+  let nearbyLocs = getLatLngAsPoints(nearby);
+  let sourcePt = new pt(source.latitude, source.longitude);
   let scaleFactor = 500;
-  let scaledLocs = []
-  let str = '';
-  for(let i = 0; i < nearbyLocs.length; i++) {
-    let newX = (nearbyLocs[i].x - sourcePt.x) * scaleFactor;
-    let newY = (nearbyLocs[i].y - sourcePt.y) * scaleFactor;
-        
-    let data = '(' + newX + ',' + newY + ')\n';
-    str += data;
+  let scaledLocs = scaleLatLngPoints(sourcePt, scaleFactor, nearbyLocs);
 
-    scaledLocs[i] = new pt(newX, newY);
-  }
-
-  console.log(str);
-  console.log(nearbyLocs);
-  console.log(scaledLocs);
-
+  // generate the loop using the scaled points, and then descale
   var slices = 7;
-  let loop = genLoop(distance, slices, scaledLocs, sourcePt);
+  let scaledLoop = genLoop(distance, slices, scaledLocs, sourcePt);
+  let descaledRoute = descaleLatLngPoints(scaledLoop);
+  
+  let waypoints = []
+  // TODO
+  return waypoints;
 }
 
 // calcRoute function is defined and the google services will need to be passed as parameters since we will use

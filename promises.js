@@ -22,7 +22,7 @@ function geocodePromise(address, service) {
 // returns a promise containing a list of nearby locations based
 // on the source and distance radius.
 // uses pagination to return 60 instead of 20 locations
-function nearbyLocationsPromise(source, distance=0) {
+function nearbyLocationsPromise(source, distance) {
   return new Promise(function(resolve, reject) {
     // call the places service to get an array of nearby places within a
     // radius of size distance from the source, and use to find waypoints
@@ -30,7 +30,7 @@ function nearbyLocationsPromise(source, distance=0) {
     let placesService = new google.maps.places.PlacesService(map);
     var request = {
       location: sourceLatLng, 
-      radius: '6000'
+      radius: distance
     };
     // grander scope array to allow for pagination
     // to store all 60 locations in one container
