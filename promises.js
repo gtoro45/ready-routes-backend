@@ -20,7 +20,8 @@ function geocodePromise(address, service) {
 }
 
 // returns a promise containing a list of nearby locations based
-// on the source and distance radius
+// on the source and distance radius.
+// uses pagination to return 60 instead of 20 locations
 function nearbyLocationsPromise(source, distance=0) {
   return new Promise(function(resolve, reject) {
     // call the places service to get an array of nearby places within a
@@ -29,15 +30,23 @@ function nearbyLocationsPromise(source, distance=0) {
     let placesService = new google.maps.places.PlacesService(map);
     var request = {
       location: sourceLatLng, 
-      radius: '4000'
+      radius: '6000'
     };
+    // grander scope array to allow for pagination
+    // to store all 60 locations in one container
+    allLocations = [];
 
-    placesService.nearbySearch(request, function(result, status) {
+    placesService.nearbySearch(request, function(result, status, pagination) {
       if(status == google.maps.places.PlacesServiceStatus.OK) {
-        // resolve
-        resolve(result);
-      //   console.log("The list: ");
-      //   console.log(result);
+        // paginate and add to array before resolution
+        allLocations = allLocations.concat(result);
+        if(pagination.hasNextPage) {
+          pagination.nextPage();
+        }
+        else {
+          // resolve
+          resolve(allLocations);
+        }
       }
       else {
         // reject
