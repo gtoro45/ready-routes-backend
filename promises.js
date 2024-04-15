@@ -57,6 +57,7 @@ function nearbyLocationsPromise(source, distance) {
   });
 }
 
+/* THIS IS FOR A FUTURE IMPLEMENTATION */
 // returns a promise containing the distance data between points pointA and pointB
 // in the traveling order A --> B, where pointA and pointB are Places Objects
 function distancePromise(pointA, pointB) {
